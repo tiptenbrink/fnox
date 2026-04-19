@@ -27,8 +27,10 @@ impl ActivateCommand {
 
         let shell = shell::get_shell(Some(&shell_name))?;
 
-        // Get the current executable path
+        // `dunce::canonicalize` avoids the poorly-supported Windows NT UNC paths that
+        // `std::fs::canonicalize` (called by `current_exe()`) produces — see dunce readme.
         let exe = std::env::current_exe()
+            .and_then(dunce::canonicalize)
             .or_else(|_| which::which("fnox"))
             .unwrap_or_else(|_| std::path::PathBuf::from("fnox"));
 

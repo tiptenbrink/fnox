@@ -6,7 +6,9 @@ pub struct Nushell;
 impl Shell for Nushell {
     fn activate(&self, opts: ActivateOptions) -> String {
         let mut out = String::new();
-        let exe = opts.exe.display().to_string();
+        // NuShell treats `\` as an escape character in string literals, so Windows path
+        // separators must be replaced with `/`. NuShell on Windows accepts both separators.
+        let exe = opts.exe.display().to_string().replace('\\', "/");
 
         out.push_str("$env.FNOX_SHELL = \"nu\"\n");
 

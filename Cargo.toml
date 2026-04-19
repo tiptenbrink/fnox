@@ -87,6 +87,7 @@ urlencoding = "2"
 usage-lib = { version = "3", features = ["clap"] }
 walkdir = "2"
 which = "8"
+dunce = "1"
 xx = { version = "2", features = ["fslock"] }
 libloading = "0.9"
 
