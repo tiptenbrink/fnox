@@ -2,6 +2,7 @@
 display_name = "YubiKey"
 serde_rename = "yubikey"
 rust_variant = "Yubikey"
+feature = "yubikey"
 module = "yubikey"
 struct_name = "YubikeyProvider"
 pass_provider_name = true

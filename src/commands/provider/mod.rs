@@ -2,7 +2,6 @@ use crate::commands::Cli;
 use crate::config::Config;
 use crate::error::Result;
 use clap::{Args, Subcommand, ValueEnum};
-use strum::{Display, EnumString, VariantNames};
 
 mod add;
 mod list;
@@ -15,12 +14,10 @@ pub use remove::RemoveCommand;
 pub use test::TestCommand;
 
 /// Supported provider types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Display, EnumString, VariantNames)]
-#[strum(serialize_all = "kebab-case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum ProviderType {
     /// 1Password
     #[value(name = "1password")]
-    #[strum(serialize = "1password")]
     OnePassword,
     /// Age encryption
     #[value(name = "age")]
@@ -30,26 +27,21 @@ pub enum ProviderType {
     Aws,
     /// AWS KMS
     #[value(name = "aws-kms")]
-    #[strum(serialize = "aws-kms")]
     AwsKms,
     /// AWS Parameter Store
     #[value(name = "aws-ps")]
-    #[strum(serialize = "aws-ps")]
     AwsParameterStore,
     /// Azure Key Vault KMS
     #[value(name = "azure-kms")]
-    #[strum(serialize = "azure-kms")]
     AzureKms,
     /// Azure Key Vault Secrets Manager
     #[value(name = "azure-sm")]
-    #[strum(serialize = "azure-sm")]
     AzureSecretsManager,
     /// Google Cloud Secret Manager
     #[value(name = "gcp")]
     Gcp,
     /// Google Cloud KMS
     #[value(name = "gcp-kms")]
-    #[strum(serialize = "gcp-kms")]
     GcpKms,
     /// FIDO2 hmac-secret hardware-backed encryption
     #[value(name = "fido2")]
@@ -62,21 +54,18 @@ pub enum ProviderType {
     Doppler,
     /// Bitwarden Secrets Manager
     #[value(name = "bitwarden-sm")]
-    #[strum(serialize = "bitwarden-sm")]
     BitwardenSecretsManager,
     /// Infisical
     #[value(name = "infisical")]
     Infisical,
     /// KeePass
     #[value(name = "keepass")]
-    #[strum(serialize = "keepass")]
     KeePass,
     /// OS Keychain
     #[value(name = "keychain")]
     Keychain,
     /// password-store (pass)
     #[value(name = "password-store")]
-    #[strum(serialize = "password-store")]
     PasswordStore,
     /// Click Studios Passwordstate
     #[value(name = "passwordstate")]
@@ -86,7 +75,6 @@ pub enum ProviderType {
     Plain,
     /// Proton Pass
     #[value(name = "proton-pass")]
-    #[strum(serialize = "proton-pass")]
     ProtonPass,
     /// HashiCorp Vault
     #[value(name = "vault")]
@@ -94,6 +82,8 @@ pub enum ProviderType {
     /// YubiKey HMAC-SHA1 hardware-backed encryption
     #[value(name = "yubikey")]
     Yubikey,
+    // Note: yubikey variant is always present in CLI for discoverability;
+    // add.rs returns an error at runtime if the yubikey feature is not compiled in
 }
 
 #[derive(Debug, Args)]

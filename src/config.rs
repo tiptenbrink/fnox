@@ -12,7 +12,6 @@ use std::fs;
 use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use strum::VariantNames;
 
 /// Default config filename, used as the clap default for `--config`.
 pub const DEFAULT_CONFIG_FILENAME: &str = "fnox.toml";
@@ -99,6 +98,7 @@ pub struct Config {
     pub root: bool,
 
     /// Lease backend configurations (for default profile)
+    #[cfg(feature = "lease")]
     #[serde(default, skip_serializing_if = "IndexMap::is_empty")]
     pub leases: IndexMap<String, crate::lease_backends::LeaseBackendConfig>,
 
@@ -215,6 +215,7 @@ pub struct SecretConfig {
 #[serde(deny_unknown_fields)]
 pub struct ProfileConfig {
     /// Lease backend configurations for this profile
+    #[cfg(feature = "lease")]
     #[serde(default, skip_serializing_if = "IndexMap::is_empty")]
     pub leases: IndexMap<String, crate::lease_backends::LeaseBackendConfig>,
 
@@ -334,7 +335,7 @@ impl McpConfig {
 }
 
 #[derive(
-    Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq, ValueEnum, VariantNames,
+    Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq, ValueEnum,
 )]
 #[serde(rename_all = "lowercase")]
 pub enum IfMissing {
@@ -606,6 +607,7 @@ impl Config {
         }
 
         // Merge lease backends (overlay takes precedence)
+        #[cfg(feature = "lease")]
         for (name, lease) in overlay.leases {
             merged.leases.insert(name, lease);
         }
@@ -634,6 +636,7 @@ impl Config {
         for (name, profile) in overlay.profiles {
             if let Some(existing_profile) = merged.profiles.get_mut(&name) {
                 // Merge existing profile
+                #[cfg(feature = "lease")]
                 for (lease_name, lease) in profile.leases {
                     existing_profile.leases.insert(lease_name, lease);
                 }
@@ -969,6 +972,7 @@ impl Config {
         Self {
             import: Vec::new(),
             root: false,
+            #[cfg(feature = "lease")]
             leases: IndexMap::new(),
             providers: IndexMap::new(),
             default_provider: None,
@@ -1062,6 +1066,7 @@ impl Config {
     }
 
     /// Get effective lease backends for a profile
+    #[cfg(feature = "lease")]
     pub fn get_leases(
         &self,
         profile: &str,
@@ -1551,6 +1556,7 @@ impl ProfileConfig {
     /// Create a new profile config
     pub fn new() -> Self {
         Self {
+            #[cfg(feature = "lease")]
             leases: IndexMap::new(),
             providers: IndexMap::new(),
             default_provider: None,
@@ -1563,8 +1569,11 @@ impl ProfileConfig {
 
     /// Check if the profile is effectively empty (no serializable content)
     pub fn is_empty(&self) -> bool {
-        self.leases.is_empty()
-            && self.providers.is_empty()
+        #[cfg(feature = "lease")]
+        if !self.leases.is_empty() {
+            return false;
+        }
+        self.providers.is_empty()
             && self.secrets.is_empty()
             && self.default_provider().is_none()
     }

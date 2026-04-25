@@ -9,11 +9,8 @@ use regex::Regex;
 use std::io::{self, Read};
 use std::sync::Arc;
 use std::{collections::HashMap, path::PathBuf};
-use strum::{Display, EnumString, VariantNames};
-
 /// Supported import formats
-#[derive(Debug, Clone, Copy, ValueEnum, Display, EnumString, VariantNames)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum ImportFormat {
     /// Environment variable format (KEY=value)
     Env,
@@ -66,7 +63,7 @@ impl ImportCommand {
     pub async fn run(&self, cli: &Cli, merged_config: Config) -> Result<()> {
         let profile = Config::get_profile(cli.profile.as_deref());
         tracing::debug!(
-            "Importing secrets in {} format into profile '{}'",
+            "Importing secrets in {:?} format into profile '{}'",
             self.format,
             profile
         );

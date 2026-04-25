@@ -31,6 +31,7 @@ pub mod keepass;
 pub mod keychain;
 pub mod onepassword;
 pub mod password_store;
+#[cfg(feature = "passwordstate")]
 pub mod passwordstate;
 pub mod plain;
 pub mod proton_pass;
@@ -38,7 +39,9 @@ pub mod resolved;
 pub mod resolver;
 pub mod secret_ref;
 pub mod vault;
+#[cfg(feature = "yubikey")]
 pub mod yubikey;
+#[cfg(feature = "yubikey")]
 pub mod yubikey_usb;
 
 pub use bitwarden::BitwardenBackend;

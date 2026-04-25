@@ -16,19 +16,24 @@ path = "src/main.rs"
 [features]
 aws = ["dep:aws-config", "dep:aws-sdk-kms", "dep:aws-sdk-secretsmanager", "dep:aws-sdk-ssm", "dep:aws-sdk-sts"]
 azure = ["dep:azure_core", "dep:azure_identity", "dep:azure_security_keyvault_keys", "dep:azure_security_keyvault_secrets"]
-gcp = ["dep:gcp_auth", "dep:google-cloud-kms", "dep:google-cloud-secretmanager-v1"]
+gcp = ["dep:gcp_auth", "dep:google-cloud-kms", "dep:google-cloud-secretmanager-v1", "dep:rustls"]
 keepass = ["dep:keepass"]
 fido2 = ["dep:ctap-hid-fido2"]
 keychain = ["dep:keyring", "dep:dbus"]
-mcp = ["dep:rmcp"]
-full = ["aws", "azure", "gcp", "keepass", "fido2", "keychain", "mcp"]
+mcp = ["dep:rmcp", "dep:aho-corasick"]
+lease = ["dep:reqwest", "dep:jsonwebtoken", "dep:rustls", "dep:xx", "dep:fslock", "chrono/serde"]
+passwordstate = ["lease", "dep:urlencoding"]
+tui = ["dep:ratatui", "dep:crossterm", "dep:arboard"]
+usage = ["dep:usage-lib"]
+yubikey = ["dep:libloading"]
+full = ["aws", "azure", "gcp", "keepass", "fido2", "keychain", "mcp", "lease", "passwordstate", "tui", "usage", "yubikey", "dep:openssl-sys"]
 
 [dependencies]
 aes-gcm = "0.11.0-rc.3"
 age = { version = "0.11", features = ["ssh"] }
-aho-corasick = "1.1.4"
+aho-corasick = { version = "1.1.4", optional = true }
 anyhow = "1"
-arboard = "3"
+arboard = { version = "3", optional = true }
 arc-swap = "1"
 async-trait = "0.1"
 atty = "0.2"
@@ -43,16 +48,16 @@ azure_security_keyvault_keys = { version = "0.9", optional = true }
 azure_security_keyvault_secrets = { version = "0.9", optional = true }
 base64 = "0.22"
 blake3 = "1"
-chrono = { version = "0.4", features = ["serde"] }
+chrono = "0.4"
 ci_info = "0.14"
 clap = { version = "4", features = ["derive", "env"] }
 console = "0.16"
-crossterm = { version = "0.29", features = ["event-stream"] }
+crossterm = { version = "0.29", features = ["event-stream"], optional = true }
 ctap-hid-fido2 = { version = "3", optional = true }
 data-encoding = "2"
 demand = "2"
 dirs = "6"
-fslock = "0.2"
+fslock = { version = "0.2", optional = true }
 futures = "0.3"
 gcp_auth = { version = "0.12", optional = true }
 google-cloud-kms = { version = "0.6", optional = true }
@@ -60,20 +65,19 @@ google-cloud-secretmanager-v1 = { version = "1.1", optional = true }
 hex = "0.4"
 hkdf = "0.13"
 indexmap = { version = "2", features = ["serde"] }
-jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
+jsonwebtoken = { version = "10", features = ["aws_lc_rs"], optional = true }
 keepass = { version = "0.10", features = ["save_kdbx4"], optional = true }
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"], optional = true }
 miette = { version = "7", features = ["fancy"] }
 miniz_oxide = "0.9"
 nix = { version = "0.31", features = ["signal", "process"] }
-pluralizer = "0.5"
 rand = "0.10"
-ratatui = "0.30"
+ratatui = { version = "0.30", optional = true }
 regex = "1"
-reqwest = { version = "0.13", default-features = false, features = ["rustls", "json", "query"] }
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "json", "query"], optional = true }
 rmcp = { version = "1", features = ["server", "transport-io", "macros"], optional = true }
 rmp-serde = "1"
-rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs", "std"] }
+rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs", "std"], optional = true }
 schemars = { version = "1", features = ["indexmap2"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -93,16 +97,15 @@ tokio = { version = "1", features = ["full"] }
 toml_edit = { version = "0.25", features = ["serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-urlencoding = "2"
-usage-lib = { version = "3", features = ["clap"] }
-walkdir = "2"
+urlencoding = { version = "2", optional = true }
+usage-lib = { version = "3", features = ["clap"], optional = true }
 which = "8"
-xx = { version = "2", features = ["fslock"] }
-libloading = "0.9"
+xx = { version = "2", features = ["fslock"], optional = true }
+libloading = { version = "0.9", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 dbus = { version = "0.9", features = ["vendored"], optional = true }
-openssl-sys = { version = "0.9", features = ["vendored"] }
+openssl-sys = { version = "0.9", features = ["vendored"], optional = true }
 
 [dev-dependencies]
 clap-sort = "1"

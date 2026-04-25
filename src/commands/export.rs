@@ -8,11 +8,8 @@ use console;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use strum::{Display, EnumString, VariantNames};
-
 /// Supported export formats
-#[derive(Debug, Clone, Copy, ValueEnum, Display, EnumString, VariantNames)]
-#[strum(serialize_all = "lowercase")]
+#[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum ExportFormat {
     /// Environment variable format (KEY=value)
     Env,

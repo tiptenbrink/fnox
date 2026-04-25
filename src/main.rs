@@ -7,8 +7,11 @@ mod config;
 mod env;
 mod error;
 mod hook_env;
+#[cfg(feature = "lease")]
 mod http;
+#[cfg(feature = "lease")]
 mod lease;
+#[cfg(feature = "lease")]
 mod lease_backends;
 #[cfg(feature = "mcp")]
 mod mcp_server;
@@ -20,6 +23,7 @@ mod source_registry;
 mod spanned;
 mod suggest;
 mod temp_file_secrets;
+#[cfg(feature = "tui")]
 mod tui;
 
 use commands::Cli;
@@ -28,7 +32,8 @@ use commands::Cli;
 async fn main() -> miette::Result<()> {
     miette::set_panic_hook();
 
-    // Initialize rustls crypto provider for GCP SDKs
+    // Initialize rustls crypto provider for GCP/lease backends
+    #[cfg(any(feature = "gcp", feature = "lease"))]
     let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
 
     let cli = Cli::parse();

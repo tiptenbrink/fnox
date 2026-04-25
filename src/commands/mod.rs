@@ -19,6 +19,7 @@ pub mod get;
 pub mod hook_env;
 pub mod import;
 pub mod init;
+#[cfg(feature = "lease")]
 pub mod lease;
 pub mod list;
 #[cfg(feature = "mcp")]
@@ -31,7 +32,9 @@ pub mod scan;
 pub mod schema;
 pub mod set;
 pub mod sync;
+#[cfg(feature = "tui")]
 pub mod tui;
+#[cfg(feature = "usage")]
 pub mod usage;
 pub mod version;
 
@@ -120,6 +123,7 @@ pub enum Commands {
     Init(init::InitCommand),
 
     /// Manage ephemeral credential leases
+    #[cfg(feature = "lease")]
     Lease(lease::LeaseCommand),
 
     /// List all secrets
@@ -155,9 +159,11 @@ pub enum Commands {
     Sync(sync::SyncCommand),
 
     /// Interactive TUI dashboard for managing secrets
+    #[cfg(feature = "tui")]
     Tui(tui::TuiCommand),
 
     /// Generate usage specification
+    #[cfg(feature = "usage")]
     Usage(usage::UsageCommand),
 
     /// Show version information
@@ -173,6 +179,7 @@ impl Commands {
             Commands::Completion(cmd) => cmd.run(cli).await,
             Commands::ConfigFiles(cmd) => cmd.run(cli).await,
             Commands::Schema(cmd) => cmd.run(cli).await,
+            #[cfg(feature = "usage")]
             Commands::Usage(cmd) => cmd.run(cli).await,
             Commands::Activate(cmd) => cmd
                 .run()
@@ -195,6 +202,7 @@ impl Commands {
             Commands::Export(cmd) => cmd.run(cli, self.load_config(cli)?).await,
             Commands::Get(cmd) => cmd.run(cli, self.load_config(cli)?).await,
             Commands::Import(cmd) => cmd.run(cli, self.load_config(cli)?).await,
+            #[cfg(feature = "lease")]
             Commands::Lease(cmd) => cmd.run(cli, self.load_config(cli)?).await,
             Commands::List(cmd) => cmd.run(cli, self.load_config(cli)?).await,
             #[cfg(feature = "mcp")]
@@ -207,6 +215,7 @@ impl Commands {
             Commands::Set(cmd) => cmd.run(cli, self.load_config(cli)?).await,
             Commands::Sync(cmd) => cmd.run(cli, self.load_config(cli)?).await,
             Commands::Scan(cmd) => cmd.run(cli, self.load_config(cli)?).await,
+            #[cfg(feature = "tui")]
             Commands::Tui(cmd) => cmd.run(cli, self.load_config(cli)?).await,
         }
     }

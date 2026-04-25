@@ -28,7 +28,7 @@ pub struct AddCommand {
 impl AddCommand {
     pub async fn run(&self, cli: &Cli) -> Result<()> {
         tracing::debug!(
-            "Adding provider '{}' of type '{}'",
+            "Adding provider '{}' of type '{:?}'",
             self.provider,
             self.provider_type
         );
@@ -201,6 +201,7 @@ impl AddCommand {
                     "FIDO2 provider requires the 'fido2' feature. Recompile with --features=fido2 or --features=full".to_string(),
                 ));
             }
+            #[cfg(feature = "yubikey")]
             ProviderType::Yubikey => {
                 let provider_name = self.provider.clone();
                 let (challenge_hex, slot_str) = tokio::task::spawn_blocking(move || {
@@ -213,6 +214,12 @@ impl AddCommand {
                     slot: StringOrSecretRef::from(slot_str.as_str()),
                     auth_command: None,
                 }
+            }
+            #[cfg(not(feature = "yubikey"))]
+            ProviderType::Yubikey => {
+                return Err(FnoxError::Config(
+                    "YubiKey provider requires the 'yubikey' feature. Recompile with --features=yubikey or --features=full".to_string(),
+                ));
             }
             ProviderType::Doppler => crate::config::ProviderConfig::Doppler {
                 project: OptionStringOrSecretRef::literal("my-project"),
@@ -257,6 +264,7 @@ impl AddCommand {
                 gpg_opts: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(feature = "passwordstate")]
             ProviderType::Passwordstate => crate::config::ProviderConfig::Passwordstate {
                 base_url: StringOrSecretRef::from("https://passwordstate.example.com"),
                 api_key: OptionStringOrSecretRef::none(),
@@ -264,6 +272,12 @@ impl AddCommand {
                 verify_ssl: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(not(feature = "passwordstate"))]
+            ProviderType::Passwordstate => {
+                return Err(FnoxError::Config(
+                    "Passwordstate provider requires the 'passwordstate' feature. Recompile with --features=passwordstate or --features=full".to_string(),
+                ));
+            }
             ProviderType::Plain => crate::config::ProviderConfig::Plain { auth_command: None },
             ProviderType::ProtonPass => crate::config::ProviderConfig::ProtonPass {
                 vault: self

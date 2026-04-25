@@ -1,11 +1,14 @@
+#[cfg(feature = "lease")]
 use crate::config::SecretConfig;
 use crate::error::{FnoxError, Result};
+#[cfg(feature = "lease")]
 use crate::lease::{self, LeaseLedger};
 use crate::secret_resolver::resolve_secret;
 use crate::suggest::{find_similar, format_suggestions};
 use crate::temp_file_secrets::create_persistent_secret_file;
 use crate::{commands::Cli, config::Config};
 use clap::Args;
+#[cfg(feature = "lease")]
 use indexmap::IndexMap;
 
 #[derive(Debug, Args)]
@@ -27,6 +30,7 @@ impl GetCommand {
         config.validate()?;
 
         // Check if the requested key is produced by a lease backend
+        #[cfg(feature = "lease")]
         if let Some((value, profile_secrets)) =
             self.resolve_from_lease(cli, &config, &profile).await?
         {
@@ -100,6 +104,7 @@ impl GetCommand {
         }
     }
 
+    #[cfg(feature = "lease")]
     /// Check if the requested key is produced by a lease backend.
     /// If so, resolve the lease and return the credential value alongside
     /// the profile secrets map (to avoid a redundant `get_secrets` call).
@@ -228,6 +233,7 @@ impl GetCommand {
         self.extract_key_from_creds(name, creds, all_secrets)
     }
 
+    #[cfg(feature = "lease")]
     fn extract_key_from_creds(
         &self,
         name: &str,
