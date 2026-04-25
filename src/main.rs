@@ -10,6 +10,7 @@ mod hook_env;
 mod http;
 mod lease;
 mod lease_backends;
+#[cfg(feature = "mcp")]
 mod mcp_server;
 mod providers;
 mod secret_resolver;

@@ -2423,6 +2423,7 @@ dependencies = [
  "dbus",
  "demand",
  "dirs",
+ "dunce",
  "fslock",
  "futures",
  "gcp_auth",

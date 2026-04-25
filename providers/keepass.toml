@@ -1,6 +1,7 @@
 # KeePass provider - local KeePass database storage
 display_name = "KeePass"
 serde_rename = "keepass"
+feature = "keepass"
 rust_variant = "KeePass"
 category = "Local"
 description = "Local KeePass database (.kdbx)"

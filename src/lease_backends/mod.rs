@@ -5,10 +5,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+#[cfg(feature = "aws")]
 pub mod aws_sts;
+#[cfg(feature = "azure")]
 pub mod azure_token;
 pub mod cloudflare;
 pub mod command;
+#[cfg(feature = "gcp")]
 pub mod gcp_iam;
 pub mod github_app;
 pub mod vault;
@@ -88,6 +91,7 @@ pub fn generate_lease_id(prefix: &str) -> String {
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum LeaseBackendConfig {
     /// AWS STS AssumeRole
+    #[cfg(feature = "aws")]
     AwsSts {
         region: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -99,6 +103,7 @@ pub enum LeaseBackendConfig {
         duration: Option<String>,
     },
     /// GCP Service Account Impersonation
+    #[cfg(feature = "gcp")]
     GcpIam {
         service_account_email: String,
         #[serde(default = "default_gcp_scopes")]
@@ -125,6 +130,7 @@ pub enum LeaseBackendConfig {
         method: String,
     },
     /// Azure Token Acquisition
+    #[cfg(feature = "azure")]
     AzureToken {
         scope: String,
         #[serde(default = "default_azure_env_var")]
@@ -182,11 +188,14 @@ impl LeaseBackendConfig {
     /// Returns a human-readable message describing what's missing, or None if ready.
     pub fn check_prerequisites(&self) -> Option<String> {
         match self {
+            #[cfg(feature = "aws")]
             LeaseBackendConfig::AwsSts { profile, .. } => aws_sts::check_prerequisites(profile),
+            #[cfg(feature = "gcp")]
             LeaseBackendConfig::GcpIam { .. } => gcp_iam::check_prerequisites(),
             LeaseBackendConfig::Vault { address, token, .. } => {
                 vault::check_prerequisites(address, token)
             }
+            #[cfg(feature = "azure")]
             LeaseBackendConfig::AzureToken { .. } => azure_token::check_prerequisites(),
             LeaseBackendConfig::Cloudflare { .. } => cloudflare::check_prerequisites(),
             LeaseBackendConfig::GithubApp {
@@ -201,11 +210,14 @@ impl LeaseBackendConfig {
     /// interactively for missing credentials.
     pub fn required_env_vars(&self) -> Vec<(&'static str, &'static str)> {
         match self {
+            #[cfg(feature = "aws")]
             LeaseBackendConfig::AwsSts { .. } => aws_sts::required_env_vars(),
+            #[cfg(feature = "gcp")]
             LeaseBackendConfig::GcpIam { .. } => gcp_iam::required_env_vars(),
             LeaseBackendConfig::Vault { address, token, .. } => {
                 vault::required_env_vars(address, token)
             }
+            #[cfg(feature = "azure")]
             LeaseBackendConfig::AzureToken { .. } => azure_token::required_env_vars(),
             LeaseBackendConfig::Cloudflare { .. } => cloudflare::required_env_vars(),
             LeaseBackendConfig::GithubApp { .. } => github_app::required_env_vars(),
@@ -216,9 +228,12 @@ impl LeaseBackendConfig {
     /// Zero-allocation check whether this backend produces the given env var key.
     pub fn produces_env_var(&self, key: &str) -> bool {
         match self {
+            #[cfg(feature = "aws")]
             LeaseBackendConfig::AwsSts { .. } => aws_sts::PRODUCED_ENV_VARS.contains(&key),
+            #[cfg(feature = "gcp")]
             LeaseBackendConfig::GcpIam { env_var, .. } => env_var == key,
             LeaseBackendConfig::Vault { env_map, .. } => env_map.values().any(|v| v == key),
+            #[cfg(feature = "azure")]
             LeaseBackendConfig::AzureToken { env_var, .. } => env_var == key,
             LeaseBackendConfig::Command { .. } => false,
             LeaseBackendConfig::Cloudflare { env_var, .. } => env_var == key,
@@ -232,9 +247,12 @@ impl LeaseBackendConfig {
     /// covering both canonical names and runtime aliases.
     pub fn consumed_env_vars(&self) -> &'static [&'static str] {
         match self {
+            #[cfg(feature = "aws")]
             LeaseBackendConfig::AwsSts { .. } => aws_sts::CONSUMED_ENV_VARS,
+            #[cfg(feature = "gcp")]
             LeaseBackendConfig::GcpIam { .. } => gcp_iam::CONSUMED_ENV_VARS,
             LeaseBackendConfig::Vault { .. } => vault::CONSUMED_ENV_VARS,
+            #[cfg(feature = "azure")]
             LeaseBackendConfig::AzureToken { .. } => azure_token::CONSUMED_ENV_VARS,
             LeaseBackendConfig::Command { .. } => command::CONSUMED_ENV_VARS,
             LeaseBackendConfig::Cloudflare { .. } => cloudflare::CONSUMED_ENV_VARS,
@@ -245,6 +263,7 @@ impl LeaseBackendConfig {
     /// Create a lease backend instance from this configuration
     pub fn create_backend(&self) -> Result<Box<dyn LeaseBackend>> {
         match self {
+            #[cfg(feature = "aws")]
             LeaseBackendConfig::AwsSts {
                 region,
                 profile,
@@ -257,6 +276,7 @@ impl LeaseBackendConfig {
                 role_arn.clone(),
                 endpoint.clone(),
             ))),
+            #[cfg(feature = "gcp")]
             LeaseBackendConfig::GcpIam {
                 service_account_email,
                 scopes,
@@ -283,6 +303,7 @@ impl LeaseBackendConfig {
                 env_map.clone(),
                 method.clone(),
             )?)),
+            #[cfg(feature = "azure")]
             LeaseBackendConfig::AzureToken { scope, env_var, .. } => Ok(Box::new(
                 azure_token::AzureTokenBackend::new(scope.clone(), env_var.clone()),
             )),
@@ -355,10 +376,13 @@ impl LeaseBackendConfig {
     /// Get the configured duration string, if any
     pub fn duration(&self) -> Option<&str> {
         match self {
-            LeaseBackendConfig::AwsSts { duration, .. }
-            | LeaseBackendConfig::GcpIam { duration, .. }
-            | LeaseBackendConfig::Vault { duration, .. }
-            | LeaseBackendConfig::AzureToken { duration, .. }
+            #[cfg(feature = "aws")]
+            LeaseBackendConfig::AwsSts { duration, .. } => duration.as_deref(),
+            #[cfg(feature = "gcp")]
+            LeaseBackendConfig::GcpIam { duration, .. } => duration.as_deref(),
+            #[cfg(feature = "azure")]
+            LeaseBackendConfig::AzureToken { duration, .. } => duration.as_deref(),
+            LeaseBackendConfig::Vault { duration, .. }
             | LeaseBackendConfig::Cloudflare { duration, .. }
             | LeaseBackendConfig::GithubApp { duration, .. }
             | LeaseBackendConfig::Command { duration, .. } => duration.as_deref(),

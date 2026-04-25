@@ -1,6 +1,7 @@
 # AWS KMS provider - encryption using AWS Key Management Service
 display_name = "AWS KMS"
 serde_rename = "aws-kms"
+feature = "aws"
 rust_variant = "AwsKms"
 category = "CloudKms"
 description = "AWS Key Management Service"

@@ -4,20 +4,30 @@ use std::collections::HashMap;
 
 // Provider implementation modules
 pub mod age;
+#[cfg(feature = "aws")]
 pub mod aws_kms;
+#[cfg(feature = "aws")]
 pub mod aws_ps;
+#[cfg(feature = "aws")]
 pub mod aws_sm;
+#[cfg(feature = "azure")]
 pub mod azure_kms;
+#[cfg(feature = "azure")]
 pub mod azure_sm;
 pub mod bitwarden;
 pub mod bitwarden_sm;
 pub mod doppler;
+#[cfg(feature = "fido2")]
 pub mod fido2;
+#[cfg(feature = "gcp")]
 pub mod gcp_kms;
+#[cfg(feature = "gcp")]
 pub mod gcp_sm;
 pub mod hw_encrypt;
 pub mod infisical;
+#[cfg(feature = "keepass")]
 pub mod keepass;
+#[cfg(feature = "keychain")]
 pub mod keychain;
 pub mod onepassword;
 pub mod password_store;
@@ -136,12 +146,6 @@ mod generated {
         include!(concat!(env!("OUT_DIR"), "/generated/providers_methods.rs"));
     }
     pub(super) mod providers_instantiate {
-        // Need to import provider modules for instantiation
-        use super::super::{
-            age, aws_kms, aws_ps, aws_sm, azure_kms, azure_sm, bitwarden, bitwarden_sm, doppler,
-            fido2, gcp_kms, gcp_sm, infisical, keepass, keychain, onepassword, password_store,
-            passwordstate, plain, proton_pass, vault, yubikey,
-        };
         include!(concat!(
             env!("OUT_DIR"),
             "/generated/providers_instantiate.rs"

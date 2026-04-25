@@ -1,6 +1,7 @@
 # Azure Key Vault Secrets provider - remote secrets storage
 display_name = "Azure Key Vault (Secrets)"
 serde_rename = "azure-sm"
+feature = "azure"
 rust_variant = "AzureSecretsManager"
 category = "CloudSecretsManager"
 description = "Azure Key Vault secrets"

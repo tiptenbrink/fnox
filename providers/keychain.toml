@@ -1,6 +1,7 @@
 # OS Keychain provider - native secure storage
 display_name = "OS Keychain"
 serde_rename = "keychain"
+feature = "keychain"
 rust_variant = "Keychain"
 category = "OsKeychain"
 description = "macOS Keychain / Windows Credential Manager / Linux Secret Service"

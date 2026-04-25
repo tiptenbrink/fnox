@@ -1,6 +1,7 @@
 # AWS Parameter Store provider - remote parameter storage
 display_name = "AWS Parameter Store"
 serde_rename = "aws-ps"
+feature = "aws"
 rust_variant = "AwsParameterStore"
 category = "CloudSecretsManager"
 description = "AWS Systems Manager Parameter Store"

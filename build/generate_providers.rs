@@ -14,6 +14,8 @@ struct ProviderTomlRaw {
     serde_rename: String,
     rust_variant: String,
     #[serde(default)]
+    feature: Option<String>,
+    #[serde(default)]
     module: Option<String>,
     #[serde(default)]
     struct_name: Option<String>,
@@ -43,6 +45,7 @@ struct ProviderToml {
     display_name: String,
     serde_rename: String,
     rust_variant: String,
+    feature: Option<String>,
     module: String,
     struct_name: String,
     category: String,
@@ -79,6 +82,7 @@ impl ProviderTomlRaw {
             display_name: self.display_name,
             serde_rename: self.serde_rename,
             rust_variant: self.rust_variant,
+            feature: self.feature,
             module,
             struct_name,
             category: self.category,
@@ -199,6 +203,13 @@ fn load_providers() -> Result<Vec<(String, ProviderToml)>, Box<dyn std::error::E
     Ok(providers)
 }
 
+fn cfg_attr(feature: &Option<String>) -> TokenStream {
+    match feature {
+        Some(feat) => quote! { #[cfg(feature = #feat)] },
+        None => quote! {},
+    }
+}
+
 fn generate_provider_config(
     providers: &[(String, ProviderToml)],
 ) -> Result<String, Box<dyn std::error::Error>> {
@@ -208,12 +219,14 @@ fn generate_provider_config(
     for (_name, provider) in providers {
         let variant = Ident::new(&provider.rust_variant, Span::call_site());
         let serde_rename = &provider.serde_rename;
+        let cfg = cfg_attr(&provider.feature);
 
         // Generate ProviderConfig variant (always struct, includes auth_command)
         let config_fields = generate_config_variant_fields(provider);
         let resolved_fields = generate_resolved_variant_fields(provider);
 
         config_variants.push(quote! {
+            #cfg
             #[serde(rename = #serde_rename)]
             #[strum(serialize = #serde_rename)]
             #variant { #(#config_fields),* }
@@ -221,10 +234,12 @@ fn generate_provider_config(
 
         if resolved_fields.is_empty() {
             resolved_variants.push(quote! {
+                #cfg
                 #variant
             });
         } else {
             resolved_variants.push(quote! {
+                #cfg
                 #variant { #(#resolved_fields),* }
             });
         }
@@ -347,16 +362,19 @@ fn generate_provider_methods(
         let variant = Ident::new(&provider.rust_variant, Span::call_site());
         let serde_rename = &provider.serde_rename;
         let module = Ident::new(&provider.module, Span::call_site());
+        let cfg = cfg_attr(&provider.feature);
 
         // try_to_resolved arm
         let try_resolved_body = generate_try_to_resolved_body(provider);
         if provider.fields.is_empty() {
             try_to_resolved_arms.push(quote! {
+                #cfg
                 Self::#variant { .. } => Ok(ResolvedProviderConfig::#variant)
             });
         } else {
             let field_patterns = generate_field_patterns(provider);
             try_to_resolved_arms.push(quote! {
+                #cfg
                 Self::#variant { #(#field_patterns),* , .. } => {
                     #try_resolved_body
                 }
@@ -366,6 +384,7 @@ fn generate_provider_methods(
         // from_wizard_fields arm
         let from_wizard_body = generate_from_wizard_fields_body(provider);
         from_wizard_fields_arms.push(quote! {
+            #cfg
             #serde_rename => { #from_wizard_body }
         });
 
@@ -376,6 +395,7 @@ fn generate_provider_methods(
             quote! { None }
         };
         auth_command_arms.push(quote! {
+            #cfg
             Self::#variant { auth_command, .. } => match auth_command.as_deref() {
                 Some("") => None,
                 Some(cmd) => Some(cmd),
@@ -383,22 +403,28 @@ fn generate_provider_methods(
             }
         });
         env_deps_arms.push(quote! {
+            #cfg
             Self::#variant { .. } => #module::env_dependencies()
         });
         let interactive = provider.requires_interactive_auth;
         interactive_auth_arms.push(quote! {
+            #cfg
             Self::#variant { .. } => #interactive
         });
     }
 
     // Note: Use super::super:: because this is included inside mod generated { mod providers_methods { ... } }
     // Also reference providers_config module for ProviderConfig and ResolvedProviderConfig
-    // Build use statements for provider modules
+    // Build use statements for provider modules (feature-gated where needed)
     let module_uses: Vec<TokenStream> = providers
         .iter()
         .map(|(_name, provider)| {
             let module = Ident::new(&provider.module, Span::call_site());
-            quote! { use super::super::#module; }
+            let cfg = cfg_attr(&provider.feature);
+            quote! {
+                #cfg
+                use super::super::#module;
+            }
         })
         .collect();
 
@@ -669,11 +695,18 @@ fn generate_provider_instantiate(
     providers: &[(String, ProviderToml)],
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut arms = Vec::new();
+    let mut module_uses = Vec::new();
 
     for (_name, provider) in providers {
         let variant = Ident::new(&provider.rust_variant, Span::call_site());
         let module = Ident::new(&provider.module, Span::call_site());
         let struct_name = Ident::new(&provider.struct_name, Span::call_site());
+        let cfg = cfg_attr(&provider.feature);
+
+        module_uses.push(quote! {
+            #cfg
+            use super::super::#module;
+        });
 
         // Prepend provider_name.to_string() if the provider needs it
         let name_arg: Vec<TokenStream> = if provider.pass_provider_name {
@@ -684,6 +717,7 @@ fn generate_provider_instantiate(
 
         if provider.fields.is_empty() {
             arms.push(quote! {
+                #cfg
                 ResolvedProviderConfig::#variant => {
                     Ok(Box::new(#module::#struct_name::new(#(#name_arg),*)?))
                 }
@@ -692,6 +726,7 @@ fn generate_provider_instantiate(
             let field_patterns = generate_field_patterns(provider);
             let new_args = generate_new_args(provider);
             arms.push(quote! {
+                #cfg
                 ResolvedProviderConfig::#variant { #(#field_patterns),* } => {
                     Ok(Box::new(#module::#struct_name::new(#(#name_arg,)* #(#new_args),*)?))
                 }
@@ -704,6 +739,7 @@ fn generate_provider_instantiate(
         use crate::error::Result;
         use super::super::Provider;
         use super::providers_config::ResolvedProviderConfig;
+        #(#module_uses)*
 
         /// Create a provider from a resolved provider configuration.
         pub fn get_provider_from_resolved(provider_name: &str, config: &ResolvedProviderConfig) -> Result<Box<dyn Provider>> {
@@ -738,15 +774,18 @@ fn generate_provider_resolver(
 
     for (_name, provider) in providers {
         let variant = Ident::new(&provider.rust_variant, Span::call_site());
+        let cfg = cfg_attr(&provider.feature);
 
         if provider.fields.is_empty() {
             arms.push(quote! {
+                #cfg
                 ProviderConfig::#variant { .. } => Ok(ResolvedProviderConfig::#variant)
             });
         } else {
             let field_patterns = generate_field_patterns(provider);
             let resolved_fields = generate_resolver_fields(provider);
             arms.push(quote! {
+                #cfg
                 ProviderConfig::#variant { #(#field_patterns),* , .. } => {
                     Ok(ResolvedProviderConfig::#variant {
                         #(#resolved_fields),*
@@ -816,7 +855,7 @@ fn generate_resolver_fields(provider: &ProviderToml) -> Vec<TokenStream> {
 fn generate_provider_wizard(
     providers: &[(String, ProviderToml)],
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let mut wizard_info_entries = Vec::new();
+    let mut push_stmts = Vec::new();
 
     for (_name, provider) in providers {
         let provider_type = &provider.serde_rename;
@@ -824,6 +863,7 @@ fn generate_provider_wizard(
         let description = &provider.description;
         let default_name = &provider.default_name;
         let setup_instructions = &provider.setup_instructions;
+        let cfg = cfg_attr(&provider.feature);
         let category = match provider.category.as_str() {
             "Local" => quote! { WizardCategory::Local },
             "PasswordManager" => quote! { WizardCategory::PasswordManager },
@@ -870,16 +910,17 @@ fn generate_provider_wizard(
             }
         }
 
-        wizard_info_entries.push(quote! {
-            WizardInfo {
+        push_stmts.push(quote! {
+            #cfg
+            v.push(WizardInfo {
                 provider_type: #provider_type,
                 display_name: #display_name,
                 description: #description,
                 category: #category,
                 setup_instructions: #setup_instructions,
                 default_name: #default_name,
-                fields: &[#(#wizard_fields),*],
-            }
+                fields: Box::leak(vec![#(#wizard_fields),*].into_boxed_slice()),
+            });
         });
     }
 
@@ -887,10 +928,15 @@ fn generate_provider_wizard(
     let output = quote! {
         use super::super::{WizardCategory, WizardField, WizardInfo};
 
-        /// All wizard info for providers, generated from providers/*.toml
-        pub static ALL_WIZARD_INFO: &[WizardInfo] = &[
-            #(#wizard_info_entries),*
-        ];
+        /// All wizard info for providers, generated from providers/*.toml.
+        /// Uses LazyLock<Vec> so entries can be conditionally included via cfg.
+        pub static ALL_WIZARD_INFO: std::sync::LazyLock<Vec<WizardInfo>> =
+            std::sync::LazyLock::new(|| {
+                #[allow(unused_mut)]
+                let mut v: Vec<WizardInfo> = Vec::new();
+                #(#push_stmts)*
+                v
+            });
     };
 
     Ok(output.to_string())

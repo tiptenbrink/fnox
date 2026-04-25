@@ -82,6 +82,7 @@ impl AddCommand {
                 token: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(feature = "aws")]
             ProviderType::Aws => crate::config::ProviderConfig::AwsSecretsManager {
                 region: StringOrSecretRef::from("us-east-1"),
                 profile: OptionStringOrSecretRef::none(),
@@ -89,6 +90,12 @@ impl AddCommand {
                 endpoint: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(not(feature = "aws"))]
+            ProviderType::Aws | ProviderType::AwsKms | ProviderType::AwsParameterStore => {
+                return Err(FnoxError::Config(
+                    "AWS providers require the 'aws' feature. Recompile with --features=aws or --features=full".to_string(),
+                ));
+            }
             ProviderType::Vault => crate::config::ProviderConfig::HashiCorpVault {
                 address: OptionStringOrSecretRef::literal("http://localhost:8200"),
                 path: OptionStringOrSecretRef::literal("secret"),
@@ -96,17 +103,26 @@ impl AddCommand {
                 namespace: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(feature = "gcp")]
             ProviderType::Gcp => crate::config::ProviderConfig::GoogleSecretManager {
                 project: StringOrSecretRef::from("my-project"),
                 prefix: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(not(feature = "gcp"))]
+            ProviderType::Gcp | ProviderType::GcpKms => {
+                return Err(FnoxError::Config(
+                    "GCP providers require the 'gcp' feature. Recompile with --features=gcp or --features=full".to_string(),
+                ));
+            }
+            #[cfg(feature = "aws")]
             ProviderType::AwsKms => crate::config::ProviderConfig::AwsKms {
                 region: StringOrSecretRef::from("us-east-1"),
                 key_id: StringOrSecretRef::from("alias/my-key"),
                 endpoint: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(feature = "aws")]
             ProviderType::AwsParameterStore => crate::config::ProviderConfig::AwsParameterStore {
                 region: StringOrSecretRef::from("us-east-1"),
                 profile: OptionStringOrSecretRef::none(),
@@ -114,11 +130,19 @@ impl AddCommand {
                 endpoint: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(feature = "azure")]
             ProviderType::AzureKms => crate::config::ProviderConfig::AzureKms {
                 vault_url: StringOrSecretRef::from("https://my-vault.vault.azure.net/"),
                 key_name: StringOrSecretRef::from("my-key"),
                 auth_command: None,
             },
+            #[cfg(not(feature = "azure"))]
+            ProviderType::AzureKms | ProviderType::AzureSecretsManager => {
+                return Err(FnoxError::Config(
+                    "Azure providers require the 'azure' feature. Recompile with --features=azure or --features=full".to_string(),
+                ));
+            }
+            #[cfg(feature = "azure")]
             ProviderType::AzureSecretsManager => {
                 crate::config::ProviderConfig::AzureSecretsManager {
                     vault_url: StringOrSecretRef::from("https://my-vault.vault.azure.net/"),
@@ -126,6 +150,7 @@ impl AddCommand {
                     auth_command: None,
                 }
             }
+            #[cfg(feature = "gcp")]
             ProviderType::GcpKms => crate::config::ProviderConfig::GcpKms {
                 project: StringOrSecretRef::from("my-project"),
                 location: StringOrSecretRef::from("global"),
@@ -152,6 +177,7 @@ impl AddCommand {
                 key_file: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(feature = "fido2")]
             ProviderType::Fido2 => {
                 let provider_name = self.provider.clone();
                 let (credential_id_hex, salt_hex, rp_id, _pin) =
@@ -168,6 +194,12 @@ impl AddCommand {
                     pin: OptionStringOrSecretRef::none(),
                     auth_command: None,
                 }
+            }
+            #[cfg(not(feature = "fido2"))]
+            ProviderType::Fido2 => {
+                return Err(FnoxError::Config(
+                    "FIDO2 provider requires the 'fido2' feature. Recompile with --features=fido2 or --features=full".to_string(),
+                ));
             }
             ProviderType::Yubikey => {
                 let provider_name = self.provider.clone();
@@ -194,17 +226,31 @@ impl AddCommand {
                 path: OptionStringOrSecretRef::literal("/"),
                 auth_command: None,
             },
+            #[cfg(feature = "keepass")]
             ProviderType::KeePass => crate::config::ProviderConfig::KeePass {
                 database: StringOrSecretRef::from("~/secrets.kdbx"),
                 keyfile: OptionStringOrSecretRef::none(),
                 password: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(not(feature = "keepass"))]
+            ProviderType::KeePass => {
+                return Err(FnoxError::Config(
+                    "KeePass provider requires the 'keepass' feature. Recompile with --features=keepass or --features=full".to_string(),
+                ));
+            }
+            #[cfg(feature = "keychain")]
             ProviderType::Keychain => crate::config::ProviderConfig::Keychain {
                 service: StringOrSecretRef::from("fnox"),
                 prefix: OptionStringOrSecretRef::none(),
                 auth_command: None,
             },
+            #[cfg(not(feature = "keychain"))]
+            ProviderType::Keychain => {
+                return Err(FnoxError::Config(
+                    "Keychain provider requires the 'keychain' feature. Recompile with --features=keychain or --features=full".to_string(),
+                ));
+            }
             ProviderType::PasswordStore => crate::config::ProviderConfig::PasswordStore {
                 prefix: OptionStringOrSecretRef::literal("fnox/"),
                 store_dir: OptionStringOrSecretRef::none(),

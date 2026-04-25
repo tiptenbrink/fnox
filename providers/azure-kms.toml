@@ -1,6 +1,7 @@
 # Azure Key Vault KMS provider - encryption using Azure Key Vault keys
 display_name = "Azure Key Vault (KMS)"
 serde_rename = "azure-kms"
+feature = "azure"
 rust_variant = "AzureKms"
 struct_name = "AzureKeyVaultProvider"
 category = "CloudKms"

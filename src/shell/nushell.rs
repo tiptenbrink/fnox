@@ -34,7 +34,7 @@ def --env _fnox_apply [json: string] {
         out.push_str(&format!(
             r#"
 def --env --wrapped fnox [...rest] {{
-    let command = ($rest | first | default "")
+    let command = if ($rest | is-empty) {{ "" }} else {{ $rest | first }}
     match $command {{
         "deactivate" => {{
             let result = (do -i {{ ^"{exe}" $command ...($rest | skip 1) }} | complete)

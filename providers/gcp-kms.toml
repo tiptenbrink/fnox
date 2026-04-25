@@ -1,6 +1,7 @@
 # GCP KMS provider - encryption using Google Cloud KMS
 display_name = "GCP KMS"
 serde_rename = "gcp-kms"
+feature = "gcp"
 rust_variant = "GcpKms"
 category = "CloudKms"
 description = "Google Cloud Key Management Service"
