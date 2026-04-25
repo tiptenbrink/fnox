@@ -254,6 +254,7 @@ pub enum McpTool {
 
 impl McpTool {
     /// Returns the tool name as it appears in MCP protocol
+    #[cfg(feature = "mcp")]
     pub fn tool_name(&self) -> &'static str {
         match self {
             McpTool::GetSecret => "get_secret",
@@ -310,12 +311,14 @@ impl McpConfig {
     }
 
     /// Whether exec output redaction is enabled (default: true)
+    #[cfg(feature = "mcp")]
     pub fn redact_output(&self) -> bool {
         self.redact_output.unwrap_or(true)
     }
 
     /// Filter a secrets map to only include allowed secrets.
     /// Returns the map unchanged if no allowlist is set.
+    #[cfg(feature = "mcp")]
     pub fn filter_secrets(
         &self,
         secrets: IndexMap<String, SecretConfig>,
@@ -1895,6 +1898,7 @@ mod tests {
         assert_eq!(result, dir.path().join("fnox.local.toml"));
     }
 
+    #[cfg(feature = "mcp")]
     #[test]
     fn filter_secrets_none_allowlist_returns_all() {
         let cfg = McpConfig::default(); // secrets: None
@@ -1908,6 +1912,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "mcp")]
     #[test]
     fn filter_secrets_empty_allowlist_returns_empty() {
         let cfg = McpConfig {
@@ -1919,6 +1924,7 @@ mod tests {
         assert!(cfg.filter_secrets(m).is_empty());
     }
 
+    #[cfg(feature = "mcp")]
     #[test]
     fn filter_secrets_subset() {
         let cfg = McpConfig {
@@ -1933,6 +1939,7 @@ mod tests {
         assert!(!result.contains_key("B"));
     }
 
+    #[cfg(feature = "mcp")]
     #[test]
     fn filter_secrets_unknown_allowlist_entry_ignored() {
         let cfg = McpConfig {

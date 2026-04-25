@@ -126,6 +126,7 @@ pub fn resolve_provider_config_with_context<'a>(
 }
 
 /// Resolve a required `StringOrSecretRef` field to its actual string value.
+#[allow(dead_code)]
 pub fn resolve_required<'a>(
     config: &'a Config,
     profile: &'a str,

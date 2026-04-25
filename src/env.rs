@@ -8,6 +8,7 @@ use std::{path::PathBuf, sync::LazyLock};
 /// providers must not prompt or write to stderr.
 static NON_INTERACTIVE: AtomicBool = AtomicBool::new(false);
 
+#[cfg(any(feature = "tui", feature = "mcp"))]
 pub fn set_non_interactive(value: bool) {
     NON_INTERACTIVE.store(value, Ordering::Release);
 }
@@ -45,6 +46,7 @@ pub static FNOX_CONFIG_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
     })
 });
 
+#[cfg(feature = "lease")]
 pub static FNOX_STATE_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
     var_path("FNOX_STATE_DIR").unwrap_or_else(|| {
         var_path("XDG_STATE_HOME")

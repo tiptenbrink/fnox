@@ -129,38 +129,42 @@ pub fn generate() -> Result<(), Box<dyn std::error::Error>> {
     let providers_config_rs = generate_provider_config(&providers)?;
     fs::write(
         generated_dir.join("providers_config.rs"),
-        providers_config_rs,
+        with_allow_attrs(providers_config_rs),
     )?;
 
     // Generate providers_methods.rs - has_secret_refs, try_to_resolved, from_wizard_fields
     let providers_methods_rs = generate_provider_methods(&providers)?;
     fs::write(
         generated_dir.join("providers_methods.rs"),
-        providers_methods_rs,
+        with_allow_attrs(providers_methods_rs),
     )?;
 
     // Generate providers_instantiate.rs - get_provider_from_resolved
     let providers_instantiate_rs = generate_provider_instantiate(&providers)?;
     fs::write(
         generated_dir.join("providers_instantiate.rs"),
-        providers_instantiate_rs,
+        with_allow_attrs(providers_instantiate_rs),
     )?;
 
     // Generate providers_resolver.rs - resolve_provider_config match
     let providers_resolver_rs = generate_provider_resolver(&providers)?;
     fs::write(
         generated_dir.join("providers_resolver.rs"),
-        providers_resolver_rs,
+        with_allow_attrs(providers_resolver_rs),
     )?;
 
     // Generate providers_wizard.rs - ALL_WIZARD_INFO and WizardInfo
     let providers_wizard_rs = generate_provider_wizard(&providers)?;
     fs::write(
         generated_dir.join("providers_wizard.rs"),
-        providers_wizard_rs,
+        with_allow_attrs(providers_wizard_rs),
     )?;
 
     Ok(())
+}
+
+fn with_allow_attrs(code: String) -> String {
+    code
 }
 
 fn load_providers() -> Result<Vec<(String, ProviderToml)>, Box<dyn std::error::Error>> {
@@ -742,6 +746,7 @@ fn generate_provider_instantiate(
         #(#module_uses)*
 
         /// Create a provider from a resolved provider configuration.
+        #[allow(unused_variables)]
         pub fn get_provider_from_resolved(provider_name: &str, config: &ResolvedProviderConfig) -> Result<Box<dyn Provider>> {
             match config {
                 #(#arms),*

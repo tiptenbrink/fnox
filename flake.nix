@@ -43,12 +43,26 @@
         buildInputs = [ pkgs.udev ];
       };
 
-      # Dependencies-only derivation — only rebuilds when Cargo.lock changes
-      cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+      # Separate dep caches for lean vs full — different features compile different crates
+      leanArtifacts = craneLib.buildDepsOnly (commonArgs // {
+        cargoExtraArgs = "--no-default-features";
+      });
+
+      fullArtifacts = craneLib.buildDepsOnly (commonArgs // {
+        cargoExtraArgs = "--features full";
+      });
 
       fnox = craneLib.buildPackage (commonArgs // {
-        inherit cargoArtifacts;
+        cargoArtifacts = leanArtifacts;
         cargoExtraArgs = "--no-default-features";
+        cargoTestExtraArgs = "--lib -- --skip=providers::keychain::tests::test_keychain_set_and_get";
+      });
+
+      # Full-feature build: dbus and openssl-sys both use vendored on Linux,
+      # so no extra system libraries are needed beyond what commonArgs provides.
+      fnox-full = craneLib.buildPackage (commonArgs // {
+        cargoArtifacts = fullArtifacts;
+        cargoExtraArgs = "--features full";
         cargoTestExtraArgs = "--lib -- --skip=providers::keychain::tests::test_keychain_set_and_get";
       });
 
@@ -73,16 +87,18 @@
     in {
       packages.${system} = {
         default = fnox;
-        inherit fnox;
+        inherit fnox fnox-full;
       };
 
       devShells.${system}.default = devShell;
 
       checks.${system} = {
         package = fnox;
+        package-full = fnox-full;
         devShell = devShell;
         nu-integration = nuCheck;
-        deps = cargoArtifacts;
+        deps = leanArtifacts;
+        deps-full = fullArtifacts;
       };
     };
 }

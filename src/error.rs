@@ -416,6 +416,7 @@ pub enum FnoxError {
     // ========================================================================
     // Lease Errors
     // ========================================================================
+    #[cfg(feature = "lease")]
     #[error("Lease '{lease}' produced credentials but key '{key}' was absent")]
     #[diagnostic(
         code(fnox::lease::contract_violation),

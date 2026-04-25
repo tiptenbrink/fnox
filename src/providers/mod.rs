@@ -141,22 +141,28 @@ pub struct WizardInfo {
 }
 
 // Include generated code for ProviderConfig and ResolvedProviderConfig enums
+#[allow(unused_imports, dead_code)]
 mod generated {
+    #[allow(unused_imports, dead_code)]
     pub(super) mod providers_config {
         include!(concat!(env!("OUT_DIR"), "/generated/providers_config.rs"));
     }
+    #[allow(unused_imports, dead_code)]
     pub(super) mod providers_methods {
         include!(concat!(env!("OUT_DIR"), "/generated/providers_methods.rs"));
     }
+    #[allow(unused_imports, dead_code)]
     pub(super) mod providers_instantiate {
         include!(concat!(
             env!("OUT_DIR"),
             "/generated/providers_instantiate.rs"
         ));
     }
+    #[allow(unused_imports, dead_code)]
     pub(super) mod providers_wizard {
         include!(concat!(env!("OUT_DIR"), "/generated/providers_wizard.rs"));
     }
+    #[allow(unused_imports, dead_code)]
     pub(super) mod providers_resolver {
         include!(concat!(env!("OUT_DIR"), "/generated/providers_resolver.rs"));
     }

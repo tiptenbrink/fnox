@@ -1,6 +1,7 @@
 use crate::commands::Cli;
 use crate::config::Config;
 use crate::error::{FnoxError, Result};
+#[allow(unused_imports)]
 use crate::providers::{OptionStringOrSecretRef, StringOrSecretRef};
 use clap::Args;
 

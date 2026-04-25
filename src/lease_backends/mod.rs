@@ -51,6 +51,7 @@ pub trait LeaseBackend: Send + Sync {
     fn max_lease_duration(&self) -> Duration;
 }
 
+#[cfg(feature = "gcp")]
 fn default_gcp_scopes() -> Vec<String> {
     vec!["https://www.googleapis.com/auth/cloud-platform".to_string()]
 }
@@ -59,6 +60,7 @@ fn default_command_timeout() -> String {
     "30s".to_string()
 }
 
+#[cfg(feature = "gcp")]
 fn default_gcp_env_var() -> String {
     "CLOUDSDK_AUTH_ACCESS_TOKEN".to_string()
 }
@@ -67,6 +69,7 @@ fn default_vault_method() -> String {
     "get".to_string()
 }
 
+#[cfg(feature = "azure")]
 fn default_azure_env_var() -> String {
     "AZURE_ACCESS_TOKEN".to_string()
 }

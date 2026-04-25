@@ -11,6 +11,7 @@ use hkdf::Hkdf;
 use sha2::Sha256;
 
 /// Derive a 256-bit AES key from raw hardware secret bytes using HKDF.
+#[allow(dead_code)]
 fn derive_key(hw_secret: &[u8], context: &[u8]) -> [u8; 32] {
     let hk = Hkdf::<Sha256>::new(None, hw_secret);
     let mut key = [0u8; 32];
@@ -22,6 +23,7 @@ fn derive_key(hw_secret: &[u8], context: &[u8]) -> [u8; 32] {
 
 /// Encrypt a plaintext string using a hardware-derived secret.
 /// Returns a base64-encoded blob of `nonce || ciphertext || tag`.
+#[allow(dead_code)]
 pub fn encrypt(hw_secret: &[u8], context: &[u8], plaintext: &str) -> Result<String> {
     let key_bytes = derive_key(hw_secret, context);
     let cipher = Aes256Gcm::new_from_slice(&key_bytes)
@@ -46,6 +48,7 @@ pub fn encrypt(hw_secret: &[u8], context: &[u8], plaintext: &str) -> Result<Stri
 }
 
 /// Decrypt a base64-encoded blob using a hardware-derived secret.
+#[allow(dead_code)]
 pub fn decrypt(hw_secret: &[u8], context: &[u8], encrypted: &str) -> Result<String> {
     let key_bytes = derive_key(hw_secret, context);
     let cipher = Aes256Gcm::new_from_slice(&key_bytes)
